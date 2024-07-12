@@ -237,7 +237,7 @@ async def back_from_student_info_button_handler(callback: CallbackQuery, button:
     if dialog_manager.dialog_data.get('chosen_homework') is None:
         await dialog_manager.switch_to(CheckHw.view_students)
     else:
-        await dialog_manager.switch_to(CheckHw.hws_to_check)
+        await dialog_manager.switch_to(CheckHw.students_to_check)
 
 
 check_hw_dialog = Dialog(
