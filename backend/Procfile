@@ -1,0 +1,3 @@
+release: python manage.py migrate
+web: gunicorn backend.wsgi
+celery: celery -A backend worker --loglevel=info

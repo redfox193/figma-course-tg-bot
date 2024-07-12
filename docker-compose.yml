@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    command: [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
+    volumes:
+      - ./backend:/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      celery:
+        condition: service_started
+      initdb:
+        condition: service_completed_successfully
+
+  celery:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    command: [ "celery", "-A", "backend", "worker", "--loglevel=info" ]
+    volumes:
+      - ./backend:/backend
+    depends_on:
+      - redis
+
+  pgdb:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - figmacourse_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  initdb:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    command: [ "python", "manage.py", "migrate" ]
+    volumes:
+      - ./backend:/backend
+    depends_on:
+      pgdb:
+        condition: service_started
+
+  redis:
+    image: redis:7.2-bookworm
+    ports:
+      - "6379:6379"
+
+  bot:
+    build:
+      context: bot
+      dockerfile: Dockerfile
+    command: [ "python", "bot.py" ]
+    volumes:
+      - ./bot:/bot
+    depends_on:
+      - redis
+
+volumes:
+  figmacourse_data:
